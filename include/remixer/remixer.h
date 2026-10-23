@@ -11,6 +11,7 @@
 #include "rmx_audio.h"
 #include "rmx_midi.h"
 #include "rmx_ipc.h"
+#include "rmx_gui.h"
 #include "rmx_module.h"
 #include "rmx_license.h"
 

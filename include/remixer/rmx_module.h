@@ -10,10 +10,18 @@
 #include "rmx_types.h"
 #include "rmx_audio.h"
 #include "rmx_midi.h"
+#include "rmx_gui.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/* -------------------------------------------------------------------------
+ * Module Feature & Capability Flags
+ * ------------------------------------------------------------------------- */
+#define RMX_MOD_FLAG_NONE          0
+#define RMX_MOD_FLAG_HAS_CUSTOM_UI (1 << 0) /**< Module provides custom GUI via get_ui_interface */
+#define RMX_MOD_FLAG_REALTIME_SAFE (1 << 1) /**< DSP processing is lock-free and allocation-free */
 
 /* -------------------------------------------------------------------------
  * Module Categories
@@ -82,6 +90,9 @@ typedef struct rmx_module_interface {
     /** Parameter management */
     rmx_status_t (RMX_CALL *set_parameter)(rmx_handle_t instance, uint32_t param_id, float value);
     rmx_status_t (RMX_CALL *get_parameter)(rmx_handle_t instance, uint32_t param_id, float* out_value);
+
+    /** Optional custom UI interface (Returns NULL if module has no custom UI) */
+    const rmx_ui_interface_t* (RMX_CALL *get_ui_interface)(rmx_handle_t instance);
 
     /** Reset internal state/buffers (e.g. on transport rewind/stop) */
     rmx_status_t (RMX_CALL *reset)(rmx_handle_t instance);
