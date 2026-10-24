@@ -1,72 +1,85 @@
 # Remixer Tools SDK (`remixer-sdk`)
 
-[![License: Proprietary / Dual](https://img.shields.io/badge/License-Armzi%20Studio-blue.svg)](#)
+[![License: Proprietary](https://img.shields.io/badge/License-Armzi%20Studio-blue.svg)](#)
 [![Standard: C11 / C++17](https://img.shields.io/badge/Standard-C11%20%2F%20C%2B%2B17-green.svg)](#)
-[![CMake: 3.20+](https://img.shields.io/badge/CMake-3.20%2B-orange.svg)](#)
+[![Packaging: Universal .rmxpkg v2](https://img.shields.io/badge/Packaging-Universal%20.rmxpkg%20v2-purple.svg)](#)
+[![ABI: Guaranteed C-ABI](https://img.shields.io/badge/ABI-Guaranteed%20C--ABI-orange.svg)](#)
 
-ชุดมาตรฐาน C-ABI Headers, Data Structures, และ Audio/MIDI/IPC Streaming Protocols สำหรับระบบ **Remixer Tools** ออกแบบมาเพื่อให้นักพัฒนาทั้งภายในและภายนอก (Third-Party Developers) สามารถสร้างส่วนขยาย (Plugins/Modules) หรือเชื่อมต่อกับ Audio Core Engine และ Standalone Application ได้อย่างไร้รอยต่อ
+[English](#english) | [ภาษาไทย](#ภาษาไทย)
 
 ---
 
-## 📁 โครงสร้าง SDK (Directory Layout)
+<a name="english"></a>
+## 🌐 English
+
+The **Remixer Tools SDK** provides a high-performance, rock-solid pure C-ABI standard, shared data structures, real-time audio/MIDI streaming protocols, and UI extensions for the **Remixer Tools** modular workstation ecosystem. It allows first-party and third-party developers to build isolated, dynamically loaded modules (`.dll` / `.dylib` / `.so`) and distribute them as cross-platform `.rmxpkg` packages without recompiling the host application.
+
+### 📚 Documentation Hub
+
+| Guide | Description |
+| :--- | :--- |
+| 🚀 [**Getting Started Guide**](docs/en/GETTING_STARTED.md) | Architecture overview, module lifecycle, CMake setup, and building your first dynamic library. |
+| 🎨 [**GUI Extension Guide**](docs/en/GUI_EXTENSION.md) | Integrating platform-independent custom UI with `rmx_ui_interface_t`, rendering loops, and mouse events. |
+| 📦 [**Packaging Guide**](docs/en/PACKAGING_GUIDE.md) | Creating Universal Multi-Target `.rmxpkg` bundles containing binaries for Windows, macOS, and Linux. |
+| 📖 [**C-ABI API Reference**](docs/en/API_REFERENCE.md) | Exhaustive reference for all SDK header files, structs, enums, error codes, and exported entry points. |
+
+### 📁 Directory Layout
 
 ```
 remixer-tools-sdk/
 ├── include/
 │   └── remixer/
-│       ├── remixer.h       # Master include header
-│       ├── rmx_types.h     # Primitives, Versioning, Error codes (rmx_status_t)
-│       ├── rmx_audio.h     # Planar Float32 buffer formats, Stem layouts
-│       ├── rmx_midi.h      # Real-time MIDI events, Pitch detection data
-│       ├── rmx_ipc.h        # Shared memory headers, SPSC lock-free atomic rings
-│       ├── rmx_module.h    # Dynamic module vtable & lifecycle hooks
-│       └── rmx_license.h   # HWID fingerprinting, Anti-tamper heartbeat
+│       ├── remixer.h         # Master umbrella header
+│       ├── rmx_types.h       # Primitives, error codes, and platform macros
+│       ├── rmx_audio.h       # Planar Float32 audio buffers & channel layouts
+│       ├── rmx_midi.h        # Real-time MIDI events & pitch detection
+│       ├── rmx_module.h      # Module lifecycle vtable & DLL entry points
+│       ├── rmx_gui.h         # Platform-agnostic GUI rendering & input table
+│       ├── rmx_ipc.h         # Shared memory streaming & lock-free SPSC rings
+│       └── rmx_license.h     # Machine fingerprinting & anti-tamper heartbeat
+├── docs/
+│   ├── en/                   # Full English documentation
+│   └── th/                   # คู่มือภาษาไทยฉบับสมบูรณ์
 ├── examples/
-│   └── dummy_gain_module/  # ตัวอย่างการเขียน Audio DSP C Module
+│   └── dummy_gain_module/    # Reference Audio DSP C Module implementation
 ├── CMakeLists.txt
 └── README.md
 ```
 
----
-
-## 🚀 การนำไปใช้งานในโปรเจกต์ (Integration)
-
-### 1. ด้วย CMake (FetchContent หรือ Subdirectory)
+### ⚡ Quick Start: CMake Integration
 
 ```cmake
-# เพิ่ม remixer-sdk เข้าสู่โปรเจกต์ของคุณ
+# Add SDK to your project
 add_subdirectory(path/to/remixer-tools-sdk)
 
-# เชื่อมต่อเข้ากับ Target ของคุณ
-target_link_libraries(my_audio_module PRIVATE remixer::sdk)
-```
-
-### 2. ตัวอย่างการสร้างโมดูล C-ABI (`rmx_module_interface_t`)
-
-```c
-#include <remixer/remixer.h>
-
-static rmx_status_t RMX_CALL my_process_audio(rmx_handle_t instance,
-                                             const rmx_audio_buffer_t* in_buf,
-                                             rmx_audio_buffer_t* out_buf) {
-    // Zero-allocation, Lock-free Real-time audio processing
-    for (uint32_t ch = 0; ch < in_buf->num_channels; ++ch) {
-        for (uint32_t i = 0; i < in_buf->num_frames; ++i) {
-            out_buf->channels[ch][i] = in_buf->channels[ch][i] * 0.5f; // ตัวอย่างลด Gain 6dB
-        }
-    }
-    return RMX_OK;
-}
+# Link your dynamic library target
+add_library(my_module SHARED my_module.c)
+target_link_libraries(my_module PRIVATE remixer::sdk)
 ```
 
 ---
 
-## 🛡️ กฎความเสถียรของ C-ABI (ABI Stability Guarantees)
+<a name="ภาษาไทย"></a>
+## 🇹🇭 ภาษาไทย
 
-1. **Pure C11 Linkage**: ทุก Interface สื่อสารผ่าน `extern "C"` เพื่อข้ามข้อจำกัดของ C++ Name Mangling
-2. **Explicit Struct Alignment**: ใช้ `#pragma pack(push, 8)` เพื่อรับประกัน Data Alignment เดียวกันทั้งบน MSVC, Clang, และ GCC
-3. **Opaque Pointers**: ซ่อน Internal State ของโมดูลไว้หลัง `rmx_handle_t` (`void*`)
-4. **Zero-Allocation in Process Block**: `process_audio` และ `process_midi` ต้องไม่มีการจัดสรร Memory ใน Real-Time Audio Thread
+**Remixer Tools SDK** คือชุดส่วนหัว (Headers) มาตรฐาน C-ABI ประสิทธิภาพสูง พร้อมโครงสร้างข้อมูล โพรโทคอลสตรีมมิ่งเสียง/MIDI แบบเรียลไทม์ และระบบขยายส่วนติดต่อผู้ใช้ (GUI Extension) สำหรับระบบ **Remixer Tools** ออกแบบมาเพื่อให้นักพัฒนาทั้งภายในและภายนอกสามารถสร้างปลั๊กอิน/โมดูลในรูปแบบ Dynamic Library (`.dll`, `.dylib`, `.so`) และส่งมอบผ่านแพ็กเกจข้ามแพลตฟอร์ม `.rmxpkg` ได้อย่างอิสระโดยไม่จำเป็นต้องแก้ไขหรือคอมไพล์โปรแกรมหลักใหม่
+
+### 📚 สารบัญคู่มือและเอกสารการใช้งาน
+
+| เอกสารคู่มือ | รายละเอียด |
+| :--- | :--- |
+| 🚀 [**คู่มือเริ่มต้นพัฒนาโมดูล**](docs/th/GETTING_STARTED.md) | ภาพรวมสถาปัตยกรรม, วงจรชีวิตของโมดูล, การตั้งค่า CMake และการสร้างโมดูลแรก |
+| 🎨 [**การสร้างหน้าต่างแสดงผลกราฟิก (GUI)**](docs/th/GUI_EXTENSION.md) | การต่อยอด UI ด้วย `rmx_ui_interface_t`, การวาดหน้าจอ (Rendering) และการรับ Event เมาส์ |
+| 📦 [**คู่มือการแพ็กเกจ Universal Multi-Target**](docs/th/PACKAGING_GUIDE.md) | การรวมไบนารีของ Windows, macOS และ Linux ไว้ในไฟล์ `.rmxpkg` เดียวกันด้วย `rmxpkg` CLI |
+| 📖 [**เอกสารอ้างอิง C-ABI API**](docs/th/API_REFERENCE.md) | สรุปโครงสร้างข้อมูล (Struct), ค่าสถานะ (Enum), Function Pointers และ Entry Points ทั้งหมด |
+
+### 🛡️ กฎความเสถียรของ C-ABI (ABI Stability Guarantees)
+
+1. **Pure C11 Linkage**: ทุก Interface สื่อสารผ่าน `extern "C"` ปราศจาก C++ Name Mangling
+2. **Explicit Struct Alignment**: ใช้ `#pragma pack(push, 8)` กำหนด Alignment ตรงกันบน MSVC, Clang และ GCC
+3. **Opaque Handles**: ซ่อน State ภายในไว้หลัง `rmx_handle_t` (`void*`)
+4. **Zero-Allocation Audio Thread**: ฟังก์ชันประมวลผลเสียงห้ามเรียก Dynamic Memory Allocation หรือใช้ Lock
+5. **Decoupled GUI Rendering**: โปรแกรมหลักและโมดูลส่งต่อเฉพาะ Drawing Context แบบไม่ผูกติดเฟรมเวิร์ก
 
 ---
 
